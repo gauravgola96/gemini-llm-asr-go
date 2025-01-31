@@ -9,10 +9,11 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/genai"
+	"os"
 	"time"
 )
 
-const sileroFilePath = "./files/silero_vad.onnx"
+const sileroFilePath = "./model/silero_vad.onnx"
 
 var SystemInstruction = `You are an Automatic Speech Recognition (ASR) model. Your task is to transcribe the given audio with complete accuracy and precision.
 Follow the below Strict Guidelines for Audio Transcription:
@@ -41,7 +42,6 @@ type GeminiASR struct {
 	Queue             *DetectedTimeQueue
 }
 
-// TODO Clear Project Location Cred
 type GenerateOpts struct {
 	Project  string
 	Location string
@@ -67,11 +67,10 @@ func NewGeminiASR(ctx context.Context, opts GenerateOpts) (*GeminiASR, error) {
 	}
 	gemini.Queue = &DetectedTimeQueue{}
 	gemini.client, err = genai.NewClient(ctx, &genai.ClientConfig{
-		APIKey:      opts.APIKey,
-		Project:     "conversenow-dev",
-		Location:    "us-central1",
-		Backend:     genai.BackendVertexAI,
-		Credentials: opts.Cred,
+		Project:  os.Getenv("PROJECT"),
+		Location: os.Getenv("REGION"),
+		//Change to BackendGeminiAPI if using API_KEY
+		Backend: genai.BackendVertexAI,
 	})
 	if opts.Config == nil {
 		opts.Config = &genai.GenerateContentConfig{}
